@@ -15,11 +15,26 @@ const COLOR_LABELS = {
   purple: 'Purple',
 };
 
-// TypeScript DOM lib may not include these types, so declare if missing
-// @ts-expect-error: SpeechRecognitionEvent is not in all TS DOM libs
-type SpeechRecognitionEvent = any;
-// @ts-expect-error: SpeechRecognitionErrorEvent is not in all TS DOM libs
-type SpeechRecognitionErrorEvent = any;
+// Minimal type definitions for Web Speech API
+
+type SpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  abort: () => void;
+};
+
+type SpeechRecognitionEvent = {
+  results: { [key: number]: { [key: number]: { transcript: string } } };
+};
+
+type SpeechRecognitionErrorEvent = {
+  error: string;
+};
 
 export default function GamePage() {
   const { questions, current, next } = useGame();
@@ -31,7 +46,7 @@ export default function GamePage() {
   const [error, setError] = useState('');
   const [shouldListen, setShouldListen] = useState(false);
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const stopRequested = useRef(false);
   const isMounted = useRef(true);
 
@@ -54,12 +69,13 @@ export default function GamePage() {
   // Create SpeechRecognition instance once
   useEffect(() => {
     if (!micAllowed) return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) {
       setError('Speech Recognition not supported in this browser.');
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition: SpeechRecognition = new SpeechRecognitionCtor();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
