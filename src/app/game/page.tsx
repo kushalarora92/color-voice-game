@@ -218,6 +218,10 @@ export default function GamePage() {
     return <Countdown onComplete={() => setShowCountdown(false)} />;
   }
 
+  if (current >= questions.length) {
+    return null;
+  }
+
   const q = questions[current];
 
   return (
