@@ -44,7 +44,7 @@ function generateQuestions(count: number): GameQuestion[] {
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [questions, setQuestions] = useState<GameQuestion[]>(() => generateQuestions(30));
+  const [questions, setQuestions] = useState<GameQuestion[]>(() => generateQuestions(10));
   const [answers, setAnswers] = useState<GameAnswer[]>([]);
   const [current, setCurrent] = useState(0);
 
@@ -59,7 +59,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const reset = () => {
-    setQuestions(generateQuestions(30));
+    setQuestions(generateQuestions(10));
     setAnswers([]);
     setCurrent(0);
   };

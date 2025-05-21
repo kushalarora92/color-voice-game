@@ -24,6 +24,7 @@ type SpeechRecognition = {
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
+  onstart: (() => void) | null;
   start: () => void;
   abort: () => void;
 };
@@ -95,7 +96,11 @@ export default function GamePage() {
     let hadError = false;
     const recognition = recognitionRef.current;
     let ended = false;
+    let isRecognitionRunning = false;
     setListening(true);
+    recognition.onstart = () => {
+      isRecognitionRunning = true;
+    };
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       if (!isMounted.current) return;
       const transcript = event.results[0][0].transcript;
@@ -104,7 +109,6 @@ export default function GamePage() {
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (!isMounted.current) return;
       let message = 'Could not recognize speech. Try again!';
-      // Try to make error more specific
       if (event.error === 'no-speech') {
         message = 'No speech detected. Please try again.';
       } else if (event.error === 'audio-capture') {
@@ -119,22 +123,32 @@ export default function GamePage() {
     recognition.onend = () => {
       if (!isMounted.current) return;
       ended = true;
+      isRecognitionRunning = false;
       setListening(false);
-      // Only auto-restart if there was no error and user hasn't clicked Next
       if (!stopRequested.current && shouldListen && !hadError) {
         setTimeout(() => {
-          if (isMounted.current && shouldListen) {
+          if (isMounted.current && shouldListen && !isRecognitionRunning) {
             setListening(true);
-            recognition.start();
+            try {
+              recognition.start();
+            } catch (_e) {
+              // ignore if already started
+            }
           }
         }, 300);
       }
     };
-    recognition.start();
+    try {
+      recognition.start();
+      isRecognitionRunning = true;
+    } catch (_e) {
+      // ignore if already started
+    }
     return () => {
       recognition.onresult = null;
       recognition.onerror = null;
       recognition.onend = null;
+      recognition.onstart = null;
       if (!ended) recognition.abort();
       setListening(false);
     };
