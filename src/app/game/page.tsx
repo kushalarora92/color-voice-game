@@ -131,7 +131,7 @@ export default function GamePage() {
             setListening(true);
             try {
               recognition.start();
-            } catch (_e) {
+            } catch {
               // ignore if already started
             }
           }
@@ -141,7 +141,7 @@ export default function GamePage() {
     try {
       recognition.start();
       isRecognitionRunning = true;
-    } catch (_e) {
+    } catch {
       // ignore if already started
     }
     return () => {
